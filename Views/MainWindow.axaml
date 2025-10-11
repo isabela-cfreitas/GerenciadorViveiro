@@ -1,20 +1,132 @@
 <Window xmlns="https://github.com/avaloniaui"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-        xmlns:vm="using:GerenciadorViveiro.ViewModels"
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-        mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
+        xmlns:vm="using:GerenciadorViveiro.ViewModels"
+        mc:Ignorable="d" d:DesignWidth="900" d:DesignHeight="550"
         x:Class="GerenciadorViveiro.Views.MainWindow"
         x:DataType="vm:MainWindowViewModel"
-        Icon="/Assets/avalonia-logo.ico"
-        Title="GerenciadorViveiro">
+        Title="Gerenciador de Vendas"
+        Width="900" Height="550">
 
-    <Design.DataContext>
-        <!-- This only sets the DataContext for the previewer in an IDE,
-             to set the actual DataContext for runtime, set the DataContext property in code (look at App.axaml.cs) -->
-        <vm:MainWindowViewModel/>
-    </Design.DataContext>
+    <Grid Margin="10">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+        </Grid.RowDefinitions>
 
-    <TextBlock Text="{Binding Greeting}" HorizontalAlignment="Left" VerticalAlignment="Top"/>
+        <!-- Formulário -->
+        <Border Grid.Row="0" BorderBrush="#CCCCCC" BorderThickness="1" 
+                CornerRadius="5" Padding="15" Margin="0,0,0,10">
+            <Grid>
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="Auto"/>
+                </Grid.RowDefinitions>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="150"/>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="20"/>
+                    <ColumnDefinition Width="150"/>
+                    <ColumnDefinition Width="*"/>
+                </Grid.ColumnDefinitions>
 
+                <!-- Data -->
+                <TextBlock Grid.Row="0" Grid.Column="0" Text="Data:" 
+                           VerticalAlignment="Center" Margin="0,5"/>
+                <CalendarDatePicker Grid.Row="0" Grid.Column="1" 
+                                    SelectedDate="{Binding Data}" Margin="0,5"/>
+
+                <!-- Cliente -->
+                <TextBlock Grid.Row="0" Grid.Column="3" Text="Cliente:" 
+                           VerticalAlignment="Center" Margin="0,5"/>
+                <TextBox Grid.Row="0" Grid.Column="4" 
+                         Text="{Binding Cliente}" Margin="0,5"/>
+
+                <!-- Produto -->
+                <TextBlock Grid.Row="1" Grid.Column="0" Text="Produto:" 
+                           VerticalAlignment="Center" Margin="0,5"/>
+                <TextBox Grid.Row="1" Grid.Column="1" 
+                         Text="{Binding Produto}" Margin="0,5"/>
+
+                <!-- Quantidade -->
+                <TextBlock Grid.Row="1" Grid.Column="3" Text="Quantidade:" 
+                           VerticalAlignment="Center" Margin="0,5"/>
+                <TextBox Grid.Row="1" Grid.Column="4" 
+                         Text="{Binding Quantidade}" Margin="0,5"/>
+
+                <!-- Preço -->
+                <TextBlock Grid.Row="2" Grid.Column="0" Text="Preço:" 
+                           VerticalAlignment="Center" Margin="0,5"/>
+                <TextBox Grid.Row="2" Grid.Column="1" 
+                         Text="{Binding PrecoU}" Margin="0,5"/>
+
+                <!-- Forma de Pagamento -->
+                <TextBlock Grid.Row="2" Grid.Column="3" Text="Forma de Pagamento:" 
+                           VerticalAlignment="Center" Margin="0,5"/>
+                <ComboBox Grid.Row="2" Grid.Column="4" 
+                          ItemsSource="{Binding FormasPagamento}"
+                          SelectedItem="{Binding FormaPagamentoSelecionada}"
+                          Margin="0,5"/>
+
+                <!-- Botões -->
+                <StackPanel Grid.Row="3" Grid.Column="0" Grid.ColumnSpan="5" 
+                            Orientation="Horizontal" HorizontalAlignment="Center" 
+                            Margin="0,15,0,5">
+                    <Button Content="Adicionar Venda" 
+                            Command="{Binding AdicionarCommand}"
+                            Background="#4CAF50" Foreground="White"
+                            Padding="20,8" Margin="5"/>
+                    <Button Content="Excluir Selecionado" 
+                            Command="{Binding ExcluirCommand}"
+                            Background="#F44336" Foreground="White"
+                            Padding="20,8" Margin="5"/>
+                    <Button Content="Limpar Campos" 
+                            Command="{Binding LimparCommand}"
+                            Background="#2196F3" Foreground="White"
+                            Padding="20,8" Margin="5"/>
+                </StackPanel>
+            </Grid>
+        </Border>
+
+        <!-- Tabela -->
+        <Border Grid.Row="1" BorderBrush="#CCCCCC" BorderThickness="1" 
+                CornerRadius="5">
+            <DataGrid ItemsSource="{Binding Vendas}"
+                      SelectedItem="{Binding VendaSelecionada}"
+                      AutoGenerateColumns="False"
+                      IsReadOnly="True"
+                      GridLinesVisibility="All"
+                      SelectionMode="Single">
+                <DataGrid.Columns>
+                    <DataGridTextColumn Header="Data" 
+                                        Binding="{Binding Data, StringFormat='{}{0:dd/MM/yyyy}'}" 
+                                        Width="*"/>
+                    <DataGridTextColumn Header="Cliente" 
+                                        Binding="{Binding Cliente}" 
+                                        Width="*"/>
+                    <DataGridTextColumn Header="Produto" 
+                                        Binding="{Binding Produto}" 
+                                        Width="*"/>
+                    <DataGridTextColumn Header="Quantidade" 
+                                        Binding="{Binding Quantidade}" 
+                                        Width="*"/>
+                    <DataGridTextColumn Header="Preço unitário" 
+                                        Binding="{Binding PrecoU, StringFormat='C2'}" 
+                                        Width="*"/>
+                    <DataGridTextColumn Header="Preço total" 
+                                        Binding="{Binding PrecoT, StringFormat='C2'}" 
+                                        Width="*"/>
+                    <DataGridTextColumn Header="Forma de Pagamento" 
+                                        Binding="{Binding FormaPagamento}" 
+                                        Width="*"/>
+                </DataGrid.Columns>
+            </DataGrid>
+        </Border>
+    </Grid>
 </Window>

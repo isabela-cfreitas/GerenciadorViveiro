@@ -1,0 +1,79 @@
+# Build results
+bin/
+obj/
+*.o
+*.a
+*.so
+*.dylib
+
+# Visual Studio cache/options
+.vs/
+.vscode/
+!.vscode/settings.json
+!.vscode/tasks.json
+!.vscode/launch.json
+!.vscode/extensions.json
+
+# User-specific files
+*.rsuser
+*.suo
+*.user
+*.userosscache
+*.sln.docstates
+
+# Build Log
+BuildLog.htm
+
+# NuGet Packet Manager
+.nuget/
+*.nupkg
+*.snupkg
+*.lock.json
+
+# ReSharper
+.idea/
+*.DotSettings.user
+riderModule.iml
+
+# Rider IDE
+.idea/
+
+# Visual Studio for Mac
+.DS_Store
+.AppleDouble
+.LSOverride
+
+# Test Results
+TestResults/
+
+# Coverage
+coverage/
+*.coverage
+*.coveragexml
+
+# Backup files
+*.bak
+*~
+
+# OS specific
+Thumbs.db
+.DS_Store
+.env
+.env.local
+
+# IDE Extensions
+.editorconfig
+
+# Avalonia specific
+bin/
+obj/
+.vs/
+.vscode/
+
+# npm/yarn
+node_modules/
+dist/
+
+# Misc
+*.log
+*.tmp
