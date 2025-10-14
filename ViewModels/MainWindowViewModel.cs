@@ -19,107 +19,65 @@ public partial class MainWindowViewModel : ObservableObject {
     private readonly string caminhoArquivo = "vendas.xlsx";
 
     [ObservableProperty]
-    private DateTime data = DateTime.Today;
-
-    [ObservableProperty]
-    private string cliente = string.Empty;
-
-    [ObservableProperty]
-    private string produto = string.Empty;
-
-    [ObservableProperty]
-    private string quantidade = string.Empty;
-
-    [ObservableProperty]
-    private string precoU = string.Empty;
-
-    [ObservableProperty]
-    private string formaPagamentoSelecionada = "Dinheiro";
-
-    [ObservableProperty]
-    private Venda? vendaSelecionada;
+    private ObservableCollection<Venda> vendasSelecionadas = new();
 
     [ObservableProperty]
     private ObservableCollection<Venda> vendas = new();
 
-    public ObservableCollection<string> FormasPagamento { get; } = new() {
-        "Dinheiro",
-        "Pix",
-        "Cartão de Crédito",
-        "Cartão de Débito",
-        "Cheque"
-    };
+    
 
     public MainWindowViewModel() {
         CarregarVendas();
+
+        // Salva automaticamente quando a coleção muda
+        Vendas.CollectionChanged += (s, e) => SalvarVendas();
+
+        // Salva quando edita propriedades de um item
+        foreach (var venda in Vendas) {
+            venda.PropertyChanged += (s, e) => SalvarVendas();
+    }
     }
 
+
     [RelayCommand]
-    private async Task Adicionar() {
-        // Validações
-        if (string.IsNullOrWhiteSpace(Cliente)) {
-            await MostrarMensagem("Aviso", "Por favor, preencha o nome do cliente.");
-            return;
-        }
-
-        if (string.IsNullOrWhiteSpace(Produto)) {
-            await MostrarMensagem("Aviso", "Por favor, preencha o produto.");
-            return;
-        }
-
-        if (!int.TryParse(Quantidade, out int qtd) || qtd <= 0) {
-            await MostrarMensagem("Aviso", "Quantidade inválida.");
-            return;
-        }
-
-        if (!decimal.TryParse(PrecoU.Replace(".", ","), out decimal precoU) || precoU <= 0) {
-            await MostrarMensagem("Aviso", "Preço inválido.");
-            return;
-        }
-
+    private void AdicionarLinha() {
         var novaVenda = new Venda {
-            Data = Data,
-            Cliente = Cliente,
-            Produto = Produto,
-            Quantidade = qtd,
-            PrecoU = precoU,
-            FormaPagamento = FormaPagamentoSelecionada
+            Data = DateTime.Today,
+            Cliente = string.Empty,
+            Produto = string.Empty,
+            Quantidade = 0,
+            PrecoU = 0,
+            FormaPagamento = "Dinheiro"
         };
-
+        
+        // Conecta o evento PropertyChanged para salvar automaticamente
+        novaVenda.PropertyChanged += (s, e) => SalvarVendas();
+        
         Vendas.Add(novaVenda);
-        SalvarVendas();
-        // await MostrarMensagem("Sucesso", "Venda adicionada com sucesso!");
-        LimparCampos();
     }
 
     [RelayCommand]
-    private async Task Excluir() {
-        if (VendaSelecionada == null) {
+    private async Task ExcluirLinhas() {
+        if (VendasSelecionadas == null || VendasSelecionadas.Count == 0) {
             await MostrarMensagem("Aviso", "Nenhuma venda selecionada.");
             return;
         }
 
-        var resultado = await MostrarConfirmacao("Confirmação", "Deseja realmente excluir a venda selecionada?");
+        var resultado = await MostrarConfirmacao("Confirmação", 
+            $"Deseja realmente excluir {VendasSelecionadas.Count} venda(s)?");
 
         if (resultado) {
-            Vendas.Remove(VendaSelecionada);
+            var vendasParaRemover = VendasSelecionadas.ToList();
+            foreach (var venda in vendasParaRemover) {
+                Vendas.Remove(venda);
+            }
             SalvarVendas();
-            // await MostrarMensagem("Sucesso", "Venda excluída com sucesso!");
         }
     }
 
     [RelayCommand]
-    private void Limpar() {
-        LimparCampos();
-    }
-
-    private void LimparCampos() {
-        Data = DateTime.Today;
-        Cliente = string.Empty;
-        Produto = string.Empty;
-        Quantidade = string.Empty;
-        PrecoU = string.Empty;
-        FormaPagamentoSelecionada = "Dinheiro";
+    private void Salvar() {
+        SalvarVendas();
     }
 
     private void CarregarVendas() {
@@ -147,6 +105,10 @@ public partial class MainWindowViewModel : ObservableObject {
                         PrecoU = row.Cell(5).GetValue<decimal>(),
                         FormaPagamento = row.Cell(6).GetString()
                     };
+
+                    // Conecta evento para salvar automaticamente ao editar
+                    venda.PropertyChanged += (s, e) => SalvarVendas();
+
                     Vendas.Add(venda);
                 }
             }
