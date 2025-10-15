@@ -78,11 +78,11 @@
                             <DataTemplate>
                                 <ComboBox SelectedItem="{Binding FormaPagamento, Mode=TwoWay}"
                                         HorizontalAlignment="Stretch">
-                                    <ComboBoxItem Content="Dinheiro"/>
-                                    <ComboBoxItem Content="Pix"/>
-                                    <ComboBoxItem Content="Cartão de Crédito"/>
-                                    <ComboBoxItem Content="Cartão de Débito"/>
-                                    <ComboBoxItem Content="Cheque"/>
+                                    <x:String>Dinheiro</x:String>
+                                    <x:String>Pix</x:String>
+                                    <x:String>Cartão de Crédito</x:String>
+                                    <x:String>Cartão de Débito</x:String>
+                                    <x:String>Cheque</x:String>
                                 </ComboBox>
                             </DataTemplate>
                         </DataGridTemplateColumn.CellEditingTemplate>
