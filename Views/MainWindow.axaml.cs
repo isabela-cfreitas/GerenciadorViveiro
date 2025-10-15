@@ -1,11 +1,12 @@
 using Avalonia.Controls;
+using Avalonia.Input;
 using GerenciadorViveiro.ViewModels;
 using System.Linq;
 
 namespace GerenciadorViveiro.Views;
 
 public partial class MainWindow : Window {
-    private MainWindowViewModel? _viewModel;
+    private MainWindowViewModel _viewModel;
 
     public MainWindow() {
         InitializeComponent();
@@ -22,4 +23,8 @@ public partial class MainWindow : Window {
             }
         };
     }
+    private void CalcularFrequencias(object? sender, TappedEventArgs e) {
+        _viewModel.CalcularFrequencias();
+    }
+
 }

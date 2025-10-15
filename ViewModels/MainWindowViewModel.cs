@@ -12,6 +12,10 @@ using GerenciadorViveiro.Models;
 using System.Diagnostics;
 using Avalonia.Logging;
 using Avalonia.Controls;
+using System.Collections.Generic;
+using Avalonia.Interactivity;
+using Avalonia.Input;
+
 
 namespace GerenciadorViveiro.ViewModels;
 
@@ -24,7 +28,8 @@ public partial class MainWindowViewModel : ObservableObject {
     [ObservableProperty]
     private ObservableCollection<Venda> vendas = new();
 
-    
+    [ObservableProperty]
+    private ObservableCollection<Frequencia> frequencias = new();
 
     public MainWindowViewModel() {
         CarregarVendas();
@@ -35,7 +40,7 @@ public partial class MainWindowViewModel : ObservableObject {
         // Salva quando edita propriedades de um item
         foreach (var venda in Vendas) {
             venda.PropertyChanged += (s, e) => SalvarVendas();
-    }
+        }
     }
 
 
@@ -156,6 +161,22 @@ public partial class MainWindowViewModel : ObservableObject {
         catch (Exception ex) {
             Console.WriteLine($"Erro ao salvar vendas: {ex.Message}");
         }
+    }
+
+    public void CalcularFrequencias() {
+        Dictionary<string, Frequencia> dict = new();
+        foreach (var venda in Vendas) {
+            if (venda.Quantidade == 0) continue;
+            if (!dict.TryGetValue(venda.Produto, out Frequencia? freq)) {
+                dict.Add(venda.Produto, new Frequencia(venda.Produto, venda.Quantidade, venda.PrecoU));
+            }
+            else {
+                freq.PrecoU = freq.PrecoT + venda.PrecoT; //preço unitário é a média do preço total
+                freq.Quantidade += venda.Quantidade;
+                freq.PrecoU /= freq.Quantidade;
+            }
+        }
+        Frequencias = new(dict.Values);
     }
 
     private void CriarArquivoExcel() {
