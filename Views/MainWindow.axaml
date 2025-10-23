@@ -15,7 +15,7 @@
     </Window.Resources>
 
     <TabControl>
-        <TabItem Header="Vendas">
+        <TabItem Header="Vendas" FontSize="20">
             <Grid Margin="10">
                 <Grid.RowDefinitions>
                 <RowDefinition Height="*"/>
@@ -109,7 +109,7 @@
             </Grid>
         </TabItem>
         
-        <TabItem Header="Frequências" Tapped="CalcularFrequencias">
+        <TabItem Header="Frequências" Tapped="CalcularFrequencias" FontSize="20" >
             <Grid Margin="10">
                 <Grid.RowDefinitions>
                 <RowDefinition Height="*"/>

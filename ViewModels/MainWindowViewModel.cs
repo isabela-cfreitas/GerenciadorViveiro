@@ -20,7 +20,7 @@ using Avalonia.Input;
 namespace GerenciadorViveiro.ViewModels;
 
 public partial class MainWindowViewModel : ObservableObject {
-    private readonly string caminhoArquivo = "vendas.xlsx";
+    private readonly string caminhoArquivo = "C:/Users/isaca/Dropbox/vendas.xlsx";
 
     [ObservableProperty]
     private ObservableCollection<Venda> vendasSelecionadas = new();
