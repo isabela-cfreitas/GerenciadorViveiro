@@ -26,7 +26,13 @@ public partial class MainWindowViewModel : ObservableObject {
     private ObservableCollection<Venda> vendasSelecionadas = new();
 
     [ObservableProperty]
+    private string filtroCliente = string.Empty;
+
+    [ObservableProperty]
     private ObservableCollection<Venda> vendas = new();
+
+    [ObservableProperty]
+    private ObservableCollection<Venda> vendasFiltradas = new();
 
     [ObservableProperty]
     private ObservableCollection<Frequencia> frequencias = new();
@@ -40,6 +46,27 @@ public partial class MainWindowViewModel : ObservableObject {
         // Salva quando edita propriedades de um item
         foreach (var venda in Vendas) {
             venda.PropertyChanged += (s, e) => SalvarVendas();
+        }
+
+        AplicarFiltro();
+    }
+
+    partial void OnFiltroClienteChanged(string value) {
+    AplicarFiltro();
+    }
+
+    private void AplicarFiltro() {
+        VendasFiltradas.Clear();
+
+        var filtradas = string.IsNullOrWhiteSpace(FiltroCliente)
+            ? Vendas
+            : Vendas.Where(v =>
+                !string.IsNullOrWhiteSpace(v.Cliente) &&
+                v.Cliente.Contains(FiltroCliente, StringComparison.OrdinalIgnoreCase)
+            );
+
+        foreach (var venda in filtradas) {
+            VendasFiltradas.Add(venda);
         }
     }
 
@@ -121,6 +148,8 @@ public partial class MainWindowViewModel : ObservableObject {
         catch (Exception ex) {
             Console.WriteLine($"Erro ao carregar vendas: {ex.Message}");
         }
+
+        AplicarFiltro();
     }
 
     private void SalvarVendas() {
