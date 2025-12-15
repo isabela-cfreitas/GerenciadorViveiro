@@ -37,12 +37,28 @@ public partial class MainWindowViewModel : ObservableObject {
     [ObservableProperty]
     private ObservableCollection<Frequencia> frequencias = new();
 
+    [ObservableProperty]
+    private int? anoSelecionado = DateTime.Today.Year;
+
+    [ObservableProperty]
+    private int mesSelecionado = DateTime.Today.Month;
+
+    [ObservableProperty]
+    private ObservableCollection<int> anosDisponiveis = new();
+
+    [ObservableProperty]
+    private ObservableCollection<int> mesesDisponiveis = new(
+        Enumerable.Range(1, 12)
+    );
+
     public MainWindowViewModel() {
         CarregarVendas();
+        AtualizarAnosDisponiveis();
 
         // Salva automaticamente quando a coleção muda
         Vendas.CollectionChanged += (s, e) => {
             SalvarVendas();
+            AtualizarAnosDisponiveis();
             AplicarFiltro();
         };
 
@@ -52,6 +68,35 @@ public partial class MainWindowViewModel : ObservableObject {
         }
 
         AplicarFiltro();
+    }
+
+    private void AtualizarAnosDisponiveis() {
+        AnosDisponiveis.Clear();
+
+        var anos = Vendas
+            .Select(v => v.Data.Year)
+            .Distinct()
+            .OrderBy(a => a);
+
+        foreach (var ano in anos) {
+            AnosDisponiveis.Add(ano);
+        }
+
+        if (
+            AnoSelecionado == null ||
+            !AnosDisponiveis.Contains(AnoSelecionado.Value)
+        ) {
+            if (AnosDisponiveis.Any())
+                AnoSelecionado = AnosDisponiveis.Last();
+        }
+    }
+
+    partial void OnAnoSelecionadoChanged(int? value) {
+        CalcularFrequencias();
+    }
+
+    partial void OnMesSelecionadoChanged(int value) {
+        CalcularFrequencias();
     }
 
     partial void OnFiltroClienteChanged(string value) {
@@ -86,7 +131,13 @@ public partial class MainWindowViewModel : ObservableObject {
         };
         
         // Conecta o evento PropertyChanged para salvar automaticamente
-        novaVenda.PropertyChanged += (s, e) => SalvarVendas();
+        novaVenda.PropertyChanged += (s, e) => {
+            SalvarVendas();
+
+            if (e.PropertyName == nameof(Venda.Data)) {
+                AtualizarAnosDisponiveis();
+            }
+        };
         
         Vendas.Add(novaVenda);
         AplicarFiltro();
@@ -145,7 +196,13 @@ public partial class MainWindowViewModel : ObservableObject {
                     };
 
                     // Conecta evento para salvar automaticamente ao editar
-                    venda.PropertyChanged += (s, e) => SalvarVendas();
+                    venda.PropertyChanged += (s, e) => {
+                        SalvarVendas();
+
+                        if (e.PropertyName == nameof(Venda.Data)) {
+                            AtualizarAnosDisponiveis();
+                        }
+                    };
 
                     Vendas.Add(venda);
                 }
@@ -236,18 +293,31 @@ public partial class MainWindowViewModel : ObservableObject {
     }
 
     public void CalcularFrequencias() {
+        if (AnoSelecionado == null) return;
+
         Dictionary<string, Frequencia> dict = new();
-        foreach (var venda in Vendas) {
+
+        var vendasPeriodo = Vendas.Where(v =>
+            v.Data.Year == AnoSelecionado &&
+            v.Data.Month == MesSelecionado
+        );
+
+        foreach (var venda in vendasPeriodo) {
             if (venda.Quantidade == 0) continue;
+
             if (!dict.TryGetValue(venda.Planta, out Frequencia? freq)) {
-                dict.Add(venda.Planta, new Frequencia(venda.Planta, venda.Quantidade, venda.Valor));
+                dict.Add(
+                    venda.Planta,
+                    new Frequencia(venda.Planta, venda.Quantidade, venda.Valor)
+                );
             }
             else {
-                freq.Valor = freq.ValorTotal + venda.ValorTotal; //preço unitário é a média do preço total
+                freq.Valor = freq.ValorTotal + venda.ValorTotal;
                 freq.Quantidade += venda.Quantidade;
                 freq.Valor /= freq.Quantidade;
             }
         }
+
         Frequencias = new(dict.Values);
     }
 

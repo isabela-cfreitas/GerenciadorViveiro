@@ -14,7 +14,7 @@
         <converters:DecimalConverter x:Key="DecimalConverter"/>
     </Window.Resources>
 
-    <TabControl>
+    <TabControl SelectionChanged="OnTabSelectionChanged">
         <TabItem Header="Vendas" FontSize="20">
             <Grid Margin="10">
                 <Grid.RowDefinitions>
@@ -132,12 +132,32 @@
         <TabItem Header="Frequências" Tapped="CalcularFrequencias" FontSize="20" >
             <Grid Margin="10">
                 <Grid.RowDefinitions>
-                <RowDefinition Height="*"/>
-                <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="*"/>
                 </Grid.RowDefinitions>
 
+                <StackPanel Orientation="Horizontal"
+                            Margin="0,0,0,10">
+
+                    <TextBlock Text="Ano:"
+                            VerticalAlignment="Center"
+                            Margin="0,0,5,0"/>
+
+                    <ComboBox Width="100"
+                            ItemsSource="{Binding AnosDisponiveis}"
+                            SelectedItem="{Binding AnoSelecionado, Mode=TwoWay}"/>
+
+                    <TextBlock Text="Mês:"
+                            VerticalAlignment="Center"
+                            Margin="15,0,5,0"/>
+
+                    <ComboBox Width="80"
+                            ItemsSource="{Binding MesesDisponiveis}"
+                            SelectedItem="{Binding MesSelecionado, Mode=TwoWay}"/>
+                </StackPanel>
+
                 <!-- Tabela -->
-                <Border Grid.Row="0" BorderBrush="#CCCCCC" BorderThickness="1" 
+                <Border Grid.Row="1" BorderBrush="#CCCCCC" BorderThickness="1" 
                         CornerRadius="5">
                     <DataGrid x:Name="FrequenciasGrid"
                         ItemsSource="{Binding Frequencias}"

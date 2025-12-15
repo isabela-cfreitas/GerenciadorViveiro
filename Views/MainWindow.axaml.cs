@@ -23,6 +23,21 @@ public partial class MainWindow : Window {
             }
         };
     }
+
+    private void OnTabSelectionChanged(object? sender, SelectionChangedEventArgs e){
+        if (!IsInitialized)
+            return;
+
+        //segurança extra
+        if (VendasDataGrid == null || _viewModel == null)
+            return;
+
+        VendasDataGrid.CommitEdit(DataGridEditingUnit.Cell, true);
+        VendasDataGrid.CommitEdit(DataGridEditingUnit.Row, true);
+
+        //atualiza frequências ao trocar de aba
+        _viewModel.CalcularFrequencias();
+    }
     private void CalcularFrequencias(object? sender, TappedEventArgs e) {
         _viewModel.CalcularFrequencias();
     }
