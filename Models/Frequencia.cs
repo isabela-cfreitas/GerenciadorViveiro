@@ -3,17 +3,17 @@ using CommunityToolkit.Mvvm.ComponentModel;
 
 namespace GerenciadorViveiro.Models;
 
-public partial class Frequencia(string produto = "", int quantidade= 0, decimal precoU = 0) : ObservableObject {
+public partial class Frequencia(string planta = "", int quantidade= 0, decimal valor = 0) : ObservableObject {
     [ObservableProperty]
-    private string produto = produto;
+    private string planta = planta;
 
     [ObservableProperty]
-    [NotifyPropertyChangedFor(nameof(PrecoT))]
+    [NotifyPropertyChangedFor(nameof(ValorTotal))]
     private int quantidade = quantidade;
 
     [ObservableProperty]
-    [NotifyPropertyChangedFor(nameof(PrecoT))]
-    private decimal precoU = precoU;
+    [NotifyPropertyChangedFor(nameof(ValorTotal))]
+    private decimal valor = valor;
 
-    public decimal PrecoT => Quantidade * PrecoU;
+    public decimal ValorTotal => Quantidade * Valor;
 }

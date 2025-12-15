@@ -11,18 +11,18 @@ public partial class Venda : ObservableObject {
     private string cliente = string.Empty;
 
     [ObservableProperty]
-    private string produto = string.Empty;
+    private string planta = string.Empty;
 
     [ObservableProperty]
-    [NotifyPropertyChangedFor(nameof(PrecoT))]
+    [NotifyPropertyChangedFor(nameof(ValorTotal))]
     private int quantidade;
 
     [ObservableProperty]
-    [NotifyPropertyChangedFor(nameof(PrecoT))]
-    private decimal precoU;
+    [NotifyPropertyChangedFor(nameof(ValorTotal))]
+    private decimal valor;
 
     [ObservableProperty]
     private string formaPagamento = "Dinheiro";
 
-    public decimal PrecoT => Quantidade * PrecoU;
+    public decimal ValorTotal => Quantidade * Valor;
 }

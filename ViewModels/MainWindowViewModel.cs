@@ -20,7 +20,7 @@ using Avalonia.Input;
 namespace GerenciadorViveiro.ViewModels;
 
 public partial class MainWindowViewModel : ObservableObject {
-    private readonly string caminhoArquivo = "C:/Users/isaca/Dropbox/vendas.xlsx";
+    private readonly string caminhoArquivo = "vendas.xlsx";
 
     [ObservableProperty]
     private ObservableCollection<Venda> vendasSelecionadas = new();
@@ -49,9 +49,9 @@ public partial class MainWindowViewModel : ObservableObject {
         var novaVenda = new Venda {
             Data = DateTime.Today,
             Cliente = string.Empty,
-            Produto = string.Empty,
+            Planta = string.Empty,
             Quantidade = 0,
-            PrecoU = 0,
+            Valor = 0,
             FormaPagamento = "Dinheiro"
         };
         
@@ -104,11 +104,11 @@ public partial class MainWindowViewModel : ObservableObject {
                 foreach (var row in rows) {
                     var venda = new Venda {
                         Data = row.Cell(1).GetDateTime(),
-                        Cliente = row.Cell(2).GetString(),
-                        Produto = row.Cell(3).GetString(),
-                        Quantidade = row.Cell(4).GetValue<int>(),
-                        PrecoU = row.Cell(5).GetValue<decimal>(),
-                        FormaPagamento = row.Cell(6).GetString()
+                        Planta = row.Cell(2).GetString(),
+                        Quantidade = row.Cell(3).GetValue<int>(),
+                        Valor = row.Cell(4).GetValue<decimal>(),
+                        Cliente = row.Cell(6).GetString(),
+                        FormaPagamento = row.Cell(7).GetString()
                     };
 
                     // Conecta evento para salvar automaticamente ao editar
@@ -127,17 +127,17 @@ public partial class MainWindowViewModel : ObservableObject {
         try {
             using var workbook = new XLWorkbook();
             var worksheet = workbook.Worksheets.Add("Vendas");
-
             // Cabeçalhos
             worksheet.Cell(1, 1).Value = "Data";
-            worksheet.Cell(1, 2).Value = "Cliente";
-            worksheet.Cell(1, 3).Value = "Produto";
-            worksheet.Cell(1, 4).Value = "Quantidade";
-            worksheet.Cell(1, 5).Value = "Preço";
-            worksheet.Cell(1, 6).Value = "Forma de Pagamento";
+            worksheet.Cell(1, 2).Value = "Planta";
+            worksheet.Cell(1, 3).Value = "Quantidade";
+            worksheet.Cell(1, 4).Value = "Valor";
+            worksheet.Cell(1, 5).Value = "Valor Total";
+            worksheet.Cell(1, 6).Value = "Cliente";
+            worksheet.Cell(1, 7).Value = "Forma de Pagamento";
 
             // Estilizar cabeçalho
-            var headerRange = worksheet.Range(1, 1, 1, 6);
+            var headerRange = worksheet.Range(1, 1, 1, 7);
             headerRange.Style.Font.Bold = true;
             headerRange.Style.Fill.BackgroundColor = XLColor.LightGray;
 
@@ -145,11 +145,48 @@ public partial class MainWindowViewModel : ObservableObject {
             int linha = 2;
             foreach (var venda in Vendas) {
                 worksheet.Cell(linha, 1).Value = venda.Data;
-                worksheet.Cell(linha, 2).Value = venda.Cliente;
-                worksheet.Cell(linha, 3).Value = venda.Produto;
-                worksheet.Cell(linha, 4).Value = venda.Quantidade;
-                worksheet.Cell(linha, 5).Value = venda.PrecoU;
-                worksheet.Cell(linha, 6).Value = venda.FormaPagamento;
+                worksheet.Cell(linha, 2).Value = venda.Planta;
+                worksheet.Cell(linha, 3).Value = venda.Quantidade;
+                worksheet.Cell(linha, 4).Value = venda.Valor;
+                worksheet.Cell(linha, 5).Value = venda.ValorTotal;
+                worksheet.Cell(linha, 6).Value = venda.Cliente;
+                worksheet.Cell(linha, 7).Value = venda.FormaPagamento;
+                linha++;
+            }
+
+            // Ajustar largura das colunas
+            worksheet.Columns().AdjustToContents();
+
+            workbook.SaveAs(caminhoArquivo);
+        }
+        catch (Exception ex) {
+            Console.WriteLine($"Erro ao salvar vendas: {ex.Message}");
+        }
+    }
+
+    private void SalvarFrequencias() {
+        try {
+            using var workbook = new XLWorkbook();
+            var worksheet = workbook.Worksheets.Add("Frequências");
+
+            // Cabeçalhos
+            worksheet.Cell(1, 1).Value = "Planta";
+            worksheet.Cell(1, 2).Value = "Quantidade";
+            worksheet.Cell(1, 3).Value = "Valor Unitário";
+            worksheet.Cell(1, 4).Value = "Valor total";
+
+            // Estilizar cabeçalho
+            var headerRange = worksheet.Range(1, 1, 1, 4);
+            headerRange.Style.Font.Bold = true;
+            headerRange.Style.Fill.BackgroundColor = XLColor.LightGray;
+
+            // Dados
+            int linha = 2;
+            foreach (var frequencia in Frequencias) {
+                worksheet.Cell(linha, 1).Value = frequencia.Planta;
+                worksheet.Cell(linha, 2).Value = frequencia.Quantidade;
+                worksheet.Cell(linha, 3).Value = frequencia.Valor;
+                worksheet.Cell(linha, 4).Value = frequencia.ValorTotal;
                 linha++;
             }
 
@@ -167,13 +204,13 @@ public partial class MainWindowViewModel : ObservableObject {
         Dictionary<string, Frequencia> dict = new();
         foreach (var venda in Vendas) {
             if (venda.Quantidade == 0) continue;
-            if (!dict.TryGetValue(venda.Produto, out Frequencia? freq)) {
-                dict.Add(venda.Produto, new Frequencia(venda.Produto, venda.Quantidade, venda.PrecoU));
+            if (!dict.TryGetValue(venda.Planta, out Frequencia? freq)) {
+                dict.Add(venda.Planta, new Frequencia(venda.Planta, venda.Quantidade, venda.Valor));
             }
             else {
-                freq.PrecoU = freq.PrecoT + venda.PrecoT; //preço unitário é a média do preço total
+                freq.Valor = freq.ValorTotal + venda.ValorTotal; //preço unitário é a média do preço total
                 freq.Quantidade += venda.Quantidade;
-                freq.PrecoU /= freq.Quantidade;
+                freq.Valor /= freq.Quantidade;
             }
         }
         Frequencias = new(dict.Values);
@@ -185,9 +222,9 @@ public partial class MainWindowViewModel : ObservableObject {
 
         worksheet.Cell(1, 1).Value = "Data";
         worksheet.Cell(1, 2).Value = "Cliente";
-        worksheet.Cell(1, 3).Value = "Produto";
+        worksheet.Cell(1, 3).Value = "Planta";
         worksheet.Cell(1, 4).Value = "Quantidade";
-        worksheet.Cell(1, 5).Value = "Preço";
+        worksheet.Cell(1, 5).Value = "Valor";
         worksheet.Cell(1, 6).Value = "Forma de Pagamento";
 
         // Estilizar cabeçalho

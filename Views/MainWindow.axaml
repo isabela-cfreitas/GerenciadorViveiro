@@ -52,17 +52,17 @@
                             <DataGridTextColumn Header="Cliente" 
                                                 Binding="{Binding Cliente}" 
                                                 Width="*"/>
-                            <DataGridTextColumn Header="Produto" 
-                                                Binding="{Binding Produto}" 
+                            <DataGridTextColumn Header="Planta" 
+                                                Binding="{Binding Planta}" 
                                                 Width="*"/>
                             <DataGridTextColumn Header="Quantidade" 
                                                 Binding="{Binding Quantidade}" 
                                                 Width="*"/>
-                            <DataGridTextColumn Header="Preço unitário" 
-                                                Binding="{Binding PrecoU, Converter={StaticResource DecimalConverter}}" 
+                            <DataGridTextColumn Header="Valor unitário" 
+                                                Binding="{Binding Valor, Converter={StaticResource DecimalConverter}}" 
                                                 Width="*"/>
-                            <DataGridTextColumn Header="Preço total" 
-                                                Binding="{Binding PrecoT, StringFormat='C2'}" 
+                            <DataGridTextColumn Header="Valor total" 
+                                                Binding="{Binding ValorTotal, StringFormat='C2'}" 
                                                 IsReadOnly="True"
                                                 Width="*"/>
                             <DataGridTemplateColumn Header="Forma de Pagamento" Width="*">
@@ -82,6 +82,7 @@
                                             <x:String>Cartão de Crédito</x:String>
                                             <x:String>Cartão de Débito</x:String>
                                             <x:String>Cheque</x:String>
+                                            <x:String>Anotado</x:String>
                                         </ComboBox>
                                     </DataTemplate>
                                 </DataGridTemplateColumn.CellEditingTemplate>
@@ -128,20 +129,20 @@
                         CanUserReorderColumns="True"
                         CanUserResizeColumns="True">
                         <DataGrid.Columns>
-                            <DataGridTextColumn Header="Produto" 
-                                                Binding="{Binding Produto}" 
+                            <DataGridTextColumn Header="Planta"
+                                                Binding="{Binding Planta}" 
                                                 IsReadOnly="True"
                                                 Width="*"/>
                             <DataGridTextColumn Header="Quantidade" 
                                                 Binding="{Binding Quantidade}"
                                                 IsReadOnly="True" 
                                                 Width="*"/>
-                            <DataGridTextColumn Header="Preço unitário" 
-                                                Binding="{Binding PrecoU, Converter={StaticResource DecimalConverter}}" 
+                            <DataGridTextColumn Header="Valor" 
+                                                Binding="{Binding Valor, Converter={StaticResource DecimalConverter}}" 
                                                 IsReadOnly="True"
                                                 Width="*"/>
-                            <DataGridTextColumn Header="Preço total" 
-                                                Binding="{Binding PrecoT, StringFormat='C2'}" 
+                            <DataGridTextColumn Header="Valor total" 
+                                                Binding="{Binding ValorTotal, StringFormat='C2'}" 
                                                 IsReadOnly="True"
                                                 Width="*"/>
                         </DataGrid.Columns>
