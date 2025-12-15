@@ -20,7 +20,7 @@ using Avalonia.Input;
 namespace GerenciadorViveiro.ViewModels;
 
 public partial class MainWindowViewModel : ObservableObject {
-    private readonly string caminhoArquivo = "vendas.xlsx";
+    private readonly string caminhoArquivo = "C:/Users/isaca/Dropbox/vendas.xlsx";
 
     [ObservableProperty]
     private ObservableCollection<Venda> vendasSelecionadas = new();
@@ -41,7 +41,10 @@ public partial class MainWindowViewModel : ObservableObject {
         CarregarVendas();
 
         // Salva automaticamente quando a coleção muda
-        Vendas.CollectionChanged += (s, e) => SalvarVendas();
+        Vendas.CollectionChanged += (s, e) => {
+            SalvarVendas();
+            AplicarFiltro();
+        };
 
         // Salva quando edita propriedades de um item
         foreach (var venda in Vendas) {
@@ -86,6 +89,7 @@ public partial class MainWindowViewModel : ObservableObject {
         novaVenda.PropertyChanged += (s, e) => SalvarVendas();
         
         Vendas.Add(novaVenda);
+        AplicarFiltro();
     }
 
     [RelayCommand]
@@ -105,6 +109,8 @@ public partial class MainWindowViewModel : ObservableObject {
             }
             SalvarVendas();
         }
+        AplicarFiltro();
+
     }
 
     [RelayCommand]
