@@ -46,6 +46,12 @@ public partial class MainWindow : Window {
     }
 
     private void VendasDataGrid_KeyDownTunnel(object? sender, KeyEventArgs e) {
+        //DEL
+        if (e.Key == Key.Delete) {
+            _viewModel.ApagarLinhasSelecionadas();
+            e.Handled = true;
+            return;
+        }
 
         // CTRL + C
         if (e.Key == Key.C && e.KeyModifiers.HasFlag(KeyModifiers.Control)) {

@@ -171,6 +171,15 @@ public partial class MainWindowViewModel : ObservableObject {
         AplicarFiltro();
     }
 
+    public void ApagarLinhasSelecionadas () {
+        var paraRemover = VendasSelecionadas.ToList();
+        foreach (var venda in paraRemover) {
+            Vendas.Remove(venda);
+        }
+
+        AplicarFiltro();
+    }
+
     [RelayCommand]
     private void AdicionarLinha() {
         var novaVenda = new Venda {
