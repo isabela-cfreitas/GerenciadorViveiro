@@ -52,10 +52,31 @@ public partial class MainWindow : Window {
             e.Handled = true;
             return;
         }
+        
+        // // CTRL + A
+        // if (e.Key == Key.A && e.KeyModifiers.HasFlag(KeyModifiers.Control)) {
+        //     _viewModel.Salvar();
+        //     e.Handled = true;
+        //     return;
+        // }
 
         // CTRL + C
         if (e.Key == Key.C && e.KeyModifiers.HasFlag(KeyModifiers.Control)) {
             _viewModel.CopiarLinhasSelecionadas();
+            e.Handled = true;
+            return;
+        }
+
+        // CTRL + N
+        if (e.Key == Key.N && e.KeyModifiers.HasFlag(KeyModifiers.Control)) {
+            _viewModel.AdicionarLinha();
+            e.Handled = true;
+            return;
+        }
+
+        // CTRL + S
+        if (e.Key == Key.S && e.KeyModifiers.HasFlag(KeyModifiers.Control)) {
+            _viewModel.Salvar();
             e.Handled = true;
             return;
         }

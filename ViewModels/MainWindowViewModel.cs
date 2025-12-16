@@ -20,7 +20,7 @@ using Avalonia.Input;
 namespace GerenciadorViveiro.ViewModels;
 
 public partial class MainWindowViewModel : ObservableObject {
-    private readonly string caminhoArquivo = "C:/Users/isaca/Dropbox/vendas.xlsx";
+    private readonly string caminhoArquivo = "vendas.xlsx";
 
     private List<Venda> _clipboardVendas = new();
 
@@ -181,7 +181,7 @@ public partial class MainWindowViewModel : ObservableObject {
     }
 
     [RelayCommand]
-    private void AdicionarLinha() {
+    public void AdicionarLinha() {
         var novaVenda = new Venda {
             Data = DateTime.Today,
             Cliente = string.Empty,
@@ -226,7 +226,7 @@ public partial class MainWindowViewModel : ObservableObject {
     }
 
     [RelayCommand]
-    private void Salvar() {
+    public void Salvar() {
         SalvarVendas();
     }
 
