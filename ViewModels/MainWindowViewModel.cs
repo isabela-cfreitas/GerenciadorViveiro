@@ -22,6 +22,8 @@ namespace GerenciadorViveiro.ViewModels;
 public partial class MainWindowViewModel : ObservableObject {
     private readonly string caminhoArquivo = "C:/Users/isaca/Dropbox/vendas.xlsx";
 
+    private List<Venda> _clipboardVendas = new();
+
     [ObservableProperty]
     private ObservableCollection<Venda> vendasSelecionadas = new();
 
@@ -118,6 +120,56 @@ public partial class MainWindowViewModel : ObservableObject {
         }
     }
 
+    private Venda ClonarVenda(Venda v) {
+        var nova = new Venda {
+            Data = v.Data,
+            Planta = v.Planta,
+            Quantidade = v.Quantidade,
+            Valor = v.Valor,
+            Cliente = v.Cliente,
+            FormaPagamento = v.FormaPagamento
+        };
+
+        nova.PropertyChanged += (s, e) => {
+            SalvarVendas();
+            if (e.PropertyName == nameof(Venda.Data))
+                AtualizarAnosDisponiveis();
+        };
+
+        return nova;
+    }
+
+    public void CopiarLinhasSelecionadas() {
+        _clipboardVendas.Clear();
+
+        foreach (var venda in VendasSelecionadas) {
+            _clipboardVendas.Add(ClonarVenda(venda));
+        }
+    }
+
+    public void ColarLinhas(int indiceBase) {
+        if (_clipboardVendas.Count == 0)
+            return;
+
+        int insertIndex = indiceBase + 1;
+
+        foreach (var venda in _clipboardVendas) {
+            Vendas.Insert(insertIndex++, ClonarVenda(venda));
+        }
+
+        AplicarFiltro();
+    }
+
+    public void RecortarLinhasSelecionadas() {
+        CopiarLinhasSelecionadas();
+
+        var paraRemover = VendasSelecionadas.ToList();
+        foreach (var venda in paraRemover) {
+            Vendas.Remove(venda);
+        }
+
+        AplicarFiltro();
+    }
 
     [RelayCommand]
     private void AdicionarLinha() {

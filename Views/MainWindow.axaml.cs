@@ -45,14 +45,38 @@ public partial class MainWindow : Window {
         _viewModel.CalcularFrequencias();
     }
 
-    private void VendasDataGrid_KeyDownTunnel(object? sender, KeyEventArgs e){
+    private void VendasDataGrid_KeyDownTunnel(object? sender, KeyEventArgs e) {
+
+        // CTRL + C
+        if (e.Key == Key.C && e.KeyModifiers.HasFlag(KeyModifiers.Control)) {
+            _viewModel.CopiarLinhasSelecionadas();
+            e.Handled = true;
+            return;
+        }
+
+        // CTRL + V
+        if (e.Key == Key.V && e.KeyModifiers.HasFlag(KeyModifiers.Control)) {
+            int index = VendasDataGrid.SelectedIndex;
+            if (index >= 0)
+                _viewModel.ColarLinhas(index);
+
+            e.Handled = true;
+            return;
+        }
+
+        // CTRL + X
+        if (e.Key == Key.X && e.KeyModifiers.HasFlag(KeyModifiers.Control)) {
+            _viewModel.RecortarLinhasSelecionadas();
+            e.Handled = true;
+            return;
+        }
+
+        // --- ENTER (seu código atual) ---
         if (e.Key != Key.Enter)
             return;
 
-        // BLOQUEIA o comportamento padrão ANTES do DataGrid processar
         e.Handled = true;
 
-        // Salva a célula atual
         VendasDataGrid.CommitEdit(DataGridEditingUnit.Cell, true);
         VendasDataGrid.CommitEdit(DataGridEditingUnit.Row, true);
 
@@ -65,27 +89,21 @@ public partial class MainWindow : Window {
         int colIndex = column.DisplayIndex;
         int totalColumns = VendasDataGrid.Columns.Count;
 
-        // Última coluna → próxima linha
-        if (colIndex == totalColumns - 1)
-        {
-            if (rowIndex < VendasDataGrid.ItemsSource.Cast<object>().Count() - 1)
-            {
+        if (colIndex == totalColumns - 1) {
+            if (rowIndex < VendasDataGrid.ItemsSource.Cast<object>().Count() - 1) {
                 VendasDataGrid.SelectedIndex = rowIndex + 1;
                 VendasDataGrid.CurrentColumn = VendasDataGrid.Columns[0];
             }
         }
-        else
-        {
-            // Próxima coluna
+        else {
             VendasDataGrid.CurrentColumn = VendasDataGrid.Columns[colIndex + 1];
         }
 
-        // Força o foco na nova célula
         VendasDataGrid.Focus();
-        
-        // Pequeno delay para garantir que a célula seja selecionada antes de entrar em edição
-        Avalonia.Threading.Dispatcher.UIThread.Post(() => {
-            VendasDataGrid.BeginEdit();
-        }, Avalonia.Threading.DispatcherPriority.Background);
+        Avalonia.Threading.Dispatcher.UIThread.Post(
+            () => VendasDataGrid.BeginEdit(),
+            Avalonia.Threading.DispatcherPriority.Background
+        );
     }
+
 }
