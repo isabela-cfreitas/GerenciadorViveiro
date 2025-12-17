@@ -16,13 +16,18 @@ using System.Collections.Generic;
 using Avalonia.Interactivity;
 using Avalonia.Input;
 
+using GerenciadorViveiro.ViewModels.Interfaces;
 
 namespace GerenciadorViveiro.ViewModels;
 
-public partial class MainWindowViewModel : ObservableObject {
-    private readonly string caminhoArquivo = "vendas.xlsx";
+
+public partial class MainWindowViewModel : ObservableObject, IEditableGridViewModel {
+    private readonly string caminhoArquivo = "C:/Users/isaca/Dropbox/vendas.xlsx";
 
     private List<Venda> _clipboardVendas = new();
+
+    [ObservableProperty]
+    private CustosViewModel custosVM = new();
 
     [ObservableProperty]
     private ObservableCollection<Venda> vendasSelecionadas = new();
@@ -98,6 +103,9 @@ public partial class MainWindowViewModel : ObservableObject {
     }
 
     partial void OnMesSelecionadoChanged(int value) {
+        if (value < 1 || value > 12)
+            return;
+
         CalcularFrequencias();
     }
 
@@ -427,4 +435,11 @@ public partial class MainWindowViewModel : ObservableObject {
     var result = await box.ShowAsync();
     return result == ButtonResult.Yes;
 }
+
+public void ApagarSelecionados() => ApagarLinhasSelecionadas();
+public void CopiarSelecionados() => CopiarLinhasSelecionadas();
+public void RecortarSelecionados() => RecortarLinhasSelecionadas();
+public void Colar(int index) => ColarLinhas(index);
+public void NovaLinha() => AdicionarLinha();
+
 }

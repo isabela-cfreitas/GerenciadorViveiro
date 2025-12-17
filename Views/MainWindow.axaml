@@ -143,17 +143,18 @@
                             VerticalAlignment="Center"
                             Margin="0,0,5,0"/>
 
-                    <ComboBox Width="100"
-                            ItemsSource="{Binding AnosDisponiveis}"
-                            SelectedItem="{Binding AnoSelecionado, Mode=TwoWay}"/>
+                    <TextBox Width="100"
+                        Text="{Binding AnoSelecionado, Mode=TwoWay}"
+                        Watermark="Ano"/>
 
                     <TextBlock Text="Mês:"
                             VerticalAlignment="Center"
                             Margin="15,0,5,0"/>
 
-                    <ComboBox Width="80"
-                            ItemsSource="{Binding MesesDisponiveis}"
-                            SelectedItem="{Binding MesSelecionado, Mode=TwoWay}"/>
+                    <TextBox Width="80"
+                        Margin="15,0,0,0"
+                        Text="{Binding MesSelecionado, Mode=TwoWay}"
+                        Watermark="Mês (1–12)"/>
                 </StackPanel>
 
                 <!-- Tabela -->
@@ -187,6 +188,62 @@
                         </DataGrid.Columns>
                     </DataGrid>
                 </Border>
+            </Grid>
+        </TabItem>
+        <TabItem Header="Custos" FontSize="20">
+            <Grid Margin="10">
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="*"/>
+                    <RowDefinition Height="Auto"/>
+                </Grid.RowDefinitions>
+
+                <!-- Seleção mês/ano -->
+                <StackPanel Orientation="Horizontal" Margin="0,0,0,10">
+                    <TextBlock Text="Ano:" Margin="0,0,5,0"/>
+                    <TextBox Width="100"
+                        Text="{Binding CustosVM.AnoSelecionado, Mode=TwoWay}"
+                        Watermark="Ano"/>
+
+                    <TextBlock Text="Mês:" Margin="15,0,5,0"/>
+                    <TextBox Width="80"
+                        Margin="15,0,0,0"
+                        Text="{Binding CustosVM.MesSelecionado, Mode=TwoWay}"
+                        Watermark="Mês (1–12)"/>
+                </StackPanel>
+
+                <!-- Tabela -->
+                <DataGrid Grid.Row="1"
+                        x:Name="CustosDataGrid"
+                        ItemsSource="{Binding CustosVM.Custos}"
+                        AutoGenerateColumns="False"
+                        GridLinesVisibility="All"
+                        SelectionMode="Extended"
+                        CanUserReorderColumns="True"
+                        CanUserResizeColumns="True">
+                    <DataGrid.Columns>
+                        <DataGridTextColumn Header="Atividade" Binding="{Binding Atividade}"/>
+                        <DataGridTextColumn Header="Elemento" Binding="{Binding Elemento}"/>
+                        <DataGridTextColumn Header="Quantidade" Binding="{Binding Quantidade}"/>
+                        <DataGridTextColumn Header="Valor Total" Binding="{Binding ValorTotal}"/>
+                    </DataGrid.Columns>
+                </DataGrid>
+
+                <!-- Botões -->
+                <StackPanel Grid.Row="2" Orientation="Horizontal" HorizontalAlignment="Center" Margin="0,10,0,0">
+                    <Button Content="Nova Linha" 
+                            Command="{Binding CustosVM.NovaLinhaCommand}"
+                            Background="#4CAF50" Foreground="White"
+                            Padding="20,8" Margin="5"/>
+                    <Button Content="Excluir Linha(s)" 
+                            Command="{Binding ExcluirLinhasCommand}"
+                            Background="#F44336" Foreground="White"
+                            Padding="20,8" Margin="5"/>
+                    <Button Content="Salvar" 
+                            Command="{Binding CustosVM.SalvarCustosCommand}"
+                            Background="#2196F3" Foreground="White"
+                            Padding="20,8" Margin="5"/>
+                </StackPanel>
             </Grid>
         </TabItem>
     </TabControl>

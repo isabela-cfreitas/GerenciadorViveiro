@@ -2,6 +2,7 @@ using Avalonia.Controls;
 using Avalonia.Input;
 using Avalonia.Interactivity;
 using GerenciadorViveiro.ViewModels;
+using GerenciadorViveiro.ViewModels.Interfaces;
 using System.Linq;
 
 namespace GerenciadorViveiro.Views;
@@ -14,7 +15,7 @@ public partial class MainWindow : Window {
         _viewModel = new MainWindowViewModel();
         DataContext = _viewModel;
 
-        // Captura a seleção múltipla
+        // Configura eventos para a tabela de Vendas
         VendasDataGrid.SelectionChanged += (s, e) => {
             if (_viewModel != null) {
                 _viewModel.VendasSelecionadas.Clear();
@@ -23,69 +24,87 @@ public partial class MainWindow : Window {
                 }
             }
         };
+        VendasDataGrid.AddHandler(KeyDownEvent, DataGrid_KeyDownTunnel, RoutingStrategies.Tunnel);
 
-        VendasDataGrid.AddHandler(KeyDownEvent, VendasDataGrid_KeyDownTunnel, RoutingStrategies.Tunnel);
+        // Configura eventos para a tabela de Custos
+        CustosDataGrid.SelectionChanged += (s, e) => {
+            if (_viewModel?.CustosVM != null) {
+                _viewModel.CustosVM.CustosSelecionados.Clear();
+                foreach (var item in CustosDataGrid.SelectedItems.Cast<Models.Custo>()) {
+                    _viewModel.CustosVM.CustosSelecionados.Add(item);
+                }
+            }
+        };
+        CustosDataGrid.AddHandler(KeyDownEvent, DataGrid_KeyDownTunnel, RoutingStrategies.Tunnel);
     }
 
     private void OnTabSelectionChanged(object? sender, SelectionChangedEventArgs e){
         if (!IsInitialized)
             return;
 
-        //segurança extra
         if (VendasDataGrid == null || _viewModel == null)
             return;
 
         VendasDataGrid.CommitEdit(DataGridEditingUnit.Cell, true);
         VendasDataGrid.CommitEdit(DataGridEditingUnit.Row, true);
+        
+        CustosDataGrid.CommitEdit(DataGridEditingUnit.Cell, true);
+        CustosDataGrid.CommitEdit(DataGridEditingUnit.Row, true);
 
-        //atualiza frequências ao trocar de aba
         _viewModel.CalcularFrequencias();
     }
+
     private void CalcularFrequencias(object? sender, TappedEventArgs e) {
         _viewModel.CalcularFrequencias();
     }
 
-    private void VendasDataGrid_KeyDownTunnel(object? sender, KeyEventArgs e) {
-        //DEL
+    private void DataGrid_KeyDownTunnel(object? sender, KeyEventArgs e) {
+        if (sender is not DataGrid dataGrid)
+            return;
+
+        // Identifica qual ViewModel usar baseado no DataGrid
+        IEditableGridViewModel? viewModel = dataGrid.Name switch {
+            nameof(VendasDataGrid) => _viewModel,
+            nameof(CustosDataGrid) => _viewModel.CustosVM,
+            _ => null
+        };
+
+        if (viewModel == null)
+            return;
+
+        // DEL
         if (e.Key == Key.Delete) {
-            _viewModel.ApagarLinhasSelecionadas();
+            viewModel.ApagarSelecionados();
             e.Handled = true;
             return;
         }
-        
-        // // CTRL + A
-        // if (e.Key == Key.A && e.KeyModifiers.HasFlag(KeyModifiers.Control)) {
-        //     _viewModel.Salvar();
-        //     e.Handled = true;
-        //     return;
-        // }
 
         // CTRL + C
         if (e.Key == Key.C && e.KeyModifiers.HasFlag(KeyModifiers.Control)) {
-            _viewModel.CopiarLinhasSelecionadas();
+            viewModel.CopiarSelecionados();
             e.Handled = true;
             return;
         }
 
         // CTRL + N
         if (e.Key == Key.N && e.KeyModifiers.HasFlag(KeyModifiers.Control)) {
-            _viewModel.AdicionarLinha();
+            viewModel.NovaLinha();
             e.Handled = true;
             return;
         }
 
         // CTRL + S
         if (e.Key == Key.S && e.KeyModifiers.HasFlag(KeyModifiers.Control)) {
-            _viewModel.Salvar();
+            viewModel.Salvar();
             e.Handled = true;
             return;
         }
 
         // CTRL + V
         if (e.Key == Key.V && e.KeyModifiers.HasFlag(KeyModifiers.Control)) {
-            int index = VendasDataGrid.SelectedIndex;
+            int index = dataGrid.SelectedIndex;
             if (index >= 0)
-                _viewModel.ColarLinhas(index);
+                viewModel.Colar(index);
 
             e.Handled = true;
             return;
@@ -93,44 +112,43 @@ public partial class MainWindow : Window {
 
         // CTRL + X
         if (e.Key == Key.X && e.KeyModifiers.HasFlag(KeyModifiers.Control)) {
-            _viewModel.RecortarLinhasSelecionadas();
+            viewModel.RecortarSelecionados();
             e.Handled = true;
             return;
         }
 
-        // --- ENTER (seu código atual) ---
+        // ENTER - navega entre células
         if (e.Key != Key.Enter)
             return;
 
         e.Handled = true;
 
-        VendasDataGrid.CommitEdit(DataGridEditingUnit.Cell, true);
-        VendasDataGrid.CommitEdit(DataGridEditingUnit.Row, true);
+        dataGrid.CommitEdit(DataGridEditingUnit.Cell, true);
+        dataGrid.CommitEdit(DataGridEditingUnit.Row, true);
 
-        int rowIndex = VendasDataGrid.SelectedIndex;
-        var column = VendasDataGrid.CurrentColumn;
+        int rowIndex = dataGrid.SelectedIndex;
+        var column = dataGrid.CurrentColumn;
 
         if (rowIndex < 0 || column == null)
             return;
 
         int colIndex = column.DisplayIndex;
-        int totalColumns = VendasDataGrid.Columns.Count;
+        int totalColumns = dataGrid.Columns.Count;
 
         if (colIndex == totalColumns - 1) {
-            if (rowIndex < VendasDataGrid.ItemsSource.Cast<object>().Count() - 1) {
-                VendasDataGrid.SelectedIndex = rowIndex + 1;
-                VendasDataGrid.CurrentColumn = VendasDataGrid.Columns[0];
+            if (rowIndex < dataGrid.ItemsSource.Cast<object>().Count() - 1) {
+                dataGrid.SelectedIndex = rowIndex + 1;
+                dataGrid.CurrentColumn = dataGrid.Columns[0];
             }
         }
         else {
-            VendasDataGrid.CurrentColumn = VendasDataGrid.Columns[colIndex + 1];
+            dataGrid.CurrentColumn = dataGrid.Columns[colIndex + 1];
         }
 
-        VendasDataGrid.Focus();
+        dataGrid.Focus();
         Avalonia.Threading.Dispatcher.UIThread.Post(
-            () => VendasDataGrid.BeginEdit(),
+            () => dataGrid.BeginEdit(),
             Avalonia.Threading.DispatcherPriority.Background
         );
     }
-
 }
