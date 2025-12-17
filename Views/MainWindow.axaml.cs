@@ -78,6 +78,13 @@ public partial class MainWindow : Window {
             e.Handled = true;
             return;
         }
+        
+        // // CTRL + A
+        // if (e.Key == Key.A && e.KeyModifiers.HasFlag(KeyModifiers.Control)) {
+        //     _viewModel.Salvar();
+        //     e.Handled = true;
+        //     return;
+        // }
 
         // CTRL + C
         if (e.Key == Key.C && e.KeyModifiers.HasFlag(KeyModifiers.Control)) {
