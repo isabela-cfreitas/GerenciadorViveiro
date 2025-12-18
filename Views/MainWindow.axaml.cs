@@ -21,7 +21,24 @@ public partial class MainWindow : Window
 
         ConfigurarEventosVendas();
         ConfigurarEventosCustos();
-        ConfigurarEventosBalanco(); 
+        ConfigurarEventosBalanco();
+        
+        //nao deixa acessar outras abas se não configurado caminho da pasta base
+        MainTabControl.SelectionChanged += ValidarConfiguracaoAntesNavegar;
+    }
+
+    private void ValidarConfiguracaoAntesNavegar(object? sender, SelectionChangedEventArgs e)
+    {
+        if (!IsInitialized || _viewModel == null)
+            return;
+
+        //se não está configurado e tentou sair da aba de configurações
+        if (!_viewModel.ConfiguracoesVM.PastaConfigurada && 
+            MainTabControl.SelectedIndex != 0)
+        {
+            //força voltar para aba de configurações
+            MainTabControl.SelectedIndex = 0;
+        }
     }
 
     private void ConfigurarEventosVendas()
@@ -56,31 +73,17 @@ public partial class MainWindow : Window
         CustosDataGrid.AddHandler(KeyDownEvent, DataGrid_KeyDownTunnel, RoutingStrategies.Tunnel);
     }
 
-    private async void SelecionarPastaVendas(object? sender, RoutedEventArgs e)
+    private async void SelecionarPastaBase(object? sender, RoutedEventArgs e)
     {
         var folder = await StorageProvider.OpenFolderPickerAsync(new FolderPickerOpenOptions
         {
-            Title = "Selecione a pasta para o arquivo de vendas",
+            Title = "Selecione a pasta base onde os dados serão salvos",
             AllowMultiple = false
         });
 
         if (folder.Count > 0)
         {
-            _viewModel.ConfiguracoesVM.PastaVendas = folder[0].Path.LocalPath;
-        }
-    }
-
-    private async void SelecionarPastaCustos(object? sender, RoutedEventArgs e)
-    {
-        var folder = await StorageProvider.OpenFolderPickerAsync(new FolderPickerOpenOptions
-        {
-            Title = "Selecione a pasta para os arquivos de custos",
-            AllowMultiple = false
-        });
-
-        if (folder.Count > 0)
-        {
-            _viewModel.ConfiguracoesVM.PastaCustos = folder[0].Path.LocalPath;
+            _viewModel.ConfiguracoesVM.PastaBase = folder[0].Path.LocalPath;
         }
     }
 
@@ -130,7 +133,7 @@ public partial class MainWindow : Window
         if (sender is not DataGrid dataGrid)
             return;
 
-        // Identifica qual ViewModel usar baseado no DataGrid
+        //identifica qual ViewModel usar baseado no DataGrid
         IEditableGridViewModel? viewModel = dataGrid.Name switch
         {
             nameof(VendasDataGrid) => _viewModel.VendasVM,

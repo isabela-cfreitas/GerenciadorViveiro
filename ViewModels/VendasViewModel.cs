@@ -15,9 +15,8 @@ using GerenciadorViveiro.ViewModels.Interfaces;
 
 namespace GerenciadorViveiro.ViewModels;
 
-public partial class VendasViewModel : ObservableObject, IEditableGridViewModel
-{
-    private readonly string caminhoArquivo = "C:/Users/isaca/Dropbox/vendas.xlsx";
+public partial class VendasViewModel : ObservableObject, IEditableGridViewModel{
+    private readonly ConfiguracoesViewModel _configuracoesVM;
     private List<Venda> _clipboardVendas = new();
 
     [ObservableProperty]
@@ -42,33 +41,36 @@ public partial class VendasViewModel : ObservableObject, IEditableGridViewModel
     public event EventHandler? VendasAlteradas;
     public event EventHandler? AnosAtualizados;
 
-    public VendasViewModel()
-    {
-        CarregarVendas();
-        AtualizarAnosDisponiveis();
-
-        Vendas.CollectionChanged += (s, e) =>
-        {
-            SalvarVendas();
-            AtualizarAnosDisponiveis();
-            AplicarFiltro();
-            VendasAlteradas?.Invoke(this, EventArgs.Empty);
+    public VendasViewModel(ConfiguracoesViewModel configuracoesVM){
+        _configuracoesVM = configuracoesVM;
+        
+        //se caminho da pasta base mudar
+        _configuracoesVM.PastasAlteradas += (s, e) =>{
+            if (_configuracoesVM.PastaConfigurada)
+                CarregarVendas();
         };
 
-        foreach (var venda in Vendas)
-        {
-            venda.PropertyChanged += (s, e) =>
-            {
-                SalvarVendas();
-                VendasAlteradas?.Invoke(this, EventArgs.Empty);
-            };
+        if (_configuracoesVM.PastaConfigurada){
+            CarregarVendas();
+            AtualizarAnosDisponiveis();
         }
+
+        // IMPORTANTE: Eventos só são registrados DEPOIS do carregamento inicial
+        // Vendas.CollectionChanged += (s, e) =>
+        // {
+        //     SalvarVendas();
+        //     AtualizarAnosDisponiveis();
+        //     AplicarFiltro();
+        //     VendasAlteradas?.Invoke(this, EventArgs.Empty);
+        // };
+        Vendas.CollectionChanged += OnVendasCollectionChanged;
 
         AplicarFiltro();
     }
 
-    private void AtualizarAnosDisponiveis()
-    {
+    private string CaminhoArquivo => _configuracoesVM.CaminhoArquivoVendas;
+
+    private void AtualizarAnosDisponiveis(){
         AnosDisponiveis.Clear();
 
         var anos = Vendas
@@ -76,21 +78,18 @@ public partial class VendasViewModel : ObservableObject, IEditableGridViewModel
             .Distinct()
             .OrderBy(a => a);
 
-        foreach (var ano in anos)
-        {
+        foreach (var ano in anos){
             AnosDisponiveis.Add(ano);
         }
 
         AnosAtualizados?.Invoke(this, EventArgs.Empty);
     }
 
-    partial void OnFiltroClienteChanged(string value)
-    {
+    partial void OnFiltroClienteChanged(string value){
         AplicarFiltro();
     }
 
-    private void AplicarFiltro()
-    {
+    private void AplicarFiltro(){
         VendasFiltradas.Clear();
 
         var filtradas = string.IsNullOrWhiteSpace(FiltroCliente)
@@ -100,14 +99,12 @@ public partial class VendasViewModel : ObservableObject, IEditableGridViewModel
                 v.Cliente.Contains(FiltroCliente, StringComparison.OrdinalIgnoreCase)
             );
 
-        foreach (var venda in filtradas)
-        {
+        foreach (var venda in filtradas){
             VendasFiltradas.Add(venda);
         }
     }
 
-    private Venda ClonarVenda(Venda v)
-    {
+    private Venda ClonarVenda(Venda v){
         var nova = new Venda
         {
             Data = v.Data,
@@ -118,61 +115,46 @@ public partial class VendasViewModel : ObservableObject, IEditableGridViewModel
             FormaPagamento = v.FormaPagamento
         };
 
-        nova.PropertyChanged += (s, e) =>
-        {
-            SalvarVendas();
-            if (e.PropertyName == nameof(Venda.Data))
-                AtualizarAnosDisponiveis();
-            
-            VendasAlteradas?.Invoke(this, EventArgs.Empty);
-        };
+        nova.PropertyChanged += OnVendaPropertyChanged;
 
         return nova;
     }
 
     //métodos da interface
-    public void CopiarSelecionados()
-    {
+    public void CopiarSelecionados(){
         _clipboardVendas.Clear();
-        foreach (var venda in VendasSelecionadas)
-        {
+        foreach (var venda in VendasSelecionadas){
             _clipboardVendas.Add(ClonarVenda(venda));
         }
     }
 
-    public void Colar(int indiceBase)
-    {
+    public void Colar(int indiceBase){
         if (_clipboardVendas.Count == 0)
             return;
 
         int insertIndex = indiceBase + 1;
 
-        foreach (var venda in _clipboardVendas)
-        {
+        foreach (var venda in _clipboardVendas){
             Vendas.Insert(insertIndex++, ClonarVenda(venda));
         }
 
         AplicarFiltro();
     }
 
-    public void RecortarSelecionados()
-    {
+    public void RecortarSelecionados(){
         CopiarSelecionados();
 
         var paraRemover = VendasSelecionadas.ToList();
-        foreach (var venda in paraRemover)
-        {
+        foreach (var venda in paraRemover){
             Vendas.Remove(venda);
         }
 
         AplicarFiltro();
     }
 
-    public void ApagarSelecionados()
-    {
+    public void ApagarSelecionados(){
         var paraRemover = VendasSelecionadas.ToList();
-        foreach (var venda in paraRemover)
-        {
+        foreach (var venda in paraRemover){
             Vendas.Remove(venda);
         }
 
@@ -180,8 +162,7 @@ public partial class VendasViewModel : ObservableObject, IEditableGridViewModel
     }
 
     [RelayCommand]
-    public void NovaLinha()
-    {
+    public void NovaLinha(){
         var novaVenda = new Venda
         {
             Data = DateTime.Today,
@@ -192,25 +173,15 @@ public partial class VendasViewModel : ObservableObject, IEditableGridViewModel
             FormaPagamento = "Dinheiro"
         };
 
-        novaVenda.PropertyChanged += (s, e) =>
-        {
-            SalvarVendas();
-            if (e.PropertyName == nameof(Venda.Data))
-            {
-                AtualizarAnosDisponiveis();
-            }
-            VendasAlteradas?.Invoke(this, EventArgs.Empty);
-        };
+        novaVenda.PropertyChanged += OnVendaPropertyChanged;
 
         Vendas.Add(novaVenda);
         AplicarFiltro();
     }
 
     [RelayCommand]
-    private async Task ExcluirLinhas()
-    {
-        if (VendasSelecionadas == null || VendasSelecionadas.Count == 0)
-        {
+    private async Task ExcluirLinhas(){
+        if (VendasSelecionadas == null || VendasSelecionadas.Count == 0){
             await MostrarMensagem("Aviso", "Nenhuma venda selecionada.");
             return;
         }
@@ -218,11 +189,9 @@ public partial class VendasViewModel : ObservableObject, IEditableGridViewModel
         var resultado = await MostrarConfirmacao("Confirmação",
             $"Deseja realmente excluir {VendasSelecionadas.Count} venda(s)?");
 
-        if (resultado)
-        {
+        if (resultado){
             var vendasParaRemover = VendasSelecionadas.ToList();
-            foreach (var venda in vendasParaRemover)
-            {
+            foreach (var venda in vendasParaRemover){
                 Vendas.Remove(venda);
             }
             SalvarVendas();
@@ -231,33 +200,33 @@ public partial class VendasViewModel : ObservableObject, IEditableGridViewModel
     }
 
     [RelayCommand]
-    public void Salvar()
-    {
+    public void Salvar(){
         SalvarVendas();
     }
 
-    private void CarregarVendas()
-    {
+    private void CarregarVendas(){
+        //CRÍTICO: Desregistra eventos ANTES de limpar para evitar salvamento automático
+        Vendas.CollectionChanged -= OnVendasCollectionChanged;
+        
         Vendas.Clear();
 
-        if (!File.Exists(caminhoArquivo))
-        {
+        if (!File.Exists(CaminhoArquivo)){
+            //só cria arquivo novo se realmente não existir
             CriarArquivoExcel();
+            //re-registra eventos
+            Vendas.CollectionChanged += OnVendasCollectionChanged;
             return;
         }
 
-        try
-        {
-            using var workbook = new XLWorkbook(caminhoArquivo);
+        try{
+            using var workbook = new XLWorkbook(CaminhoArquivo);
             var worksheet = workbook.Worksheet(1);
 
             var rangeUsed = worksheet.RangeUsed();
-            if (rangeUsed != null && !rangeUsed.IsEmpty())
-            {
+            if (rangeUsed != null && !rangeUsed.IsEmpty()){
                 var rows = rangeUsed.RowsUsed().Skip(1);
 
-                foreach (var row in rows)
-                {
+                foreach (var row in rows){
                     var venda = new Venda
                     {
                         Data = row.Cell(1).GetDateTime(),
@@ -268,32 +237,46 @@ public partial class VendasViewModel : ObservableObject, IEditableGridViewModel
                         FormaPagamento = row.Cell(7).GetString()
                     };
 
-                    venda.PropertyChanged += (s, e) =>
-                    {
-                        SalvarVendas();
-                        if (e.PropertyName == nameof(Venda.Data))
-                        {
-                            AtualizarAnosDisponiveis();
-                        }
-                        VendasAlteradas?.Invoke(this, EventArgs.Empty);
-                    };
+                    venda.PropertyChanged += OnVendaPropertyChanged;
 
                     Vendas.Add(venda);
                 }
             }
         }
-        catch (Exception ex)
-        {
+        catch (Exception ex){
             Console.WriteLine($"Erro ao carregar vendas: {ex.Message}");
         }
 
+        //re-registra eventos DEPOIS de carregar tudo
+        Vendas.CollectionChanged += OnVendasCollectionChanged;
         AplicarFiltro();
     }
 
-    private void SalvarVendas()
-    {
-        try
-        {
+    private void OnVendasCollectionChanged(object? sender, System.Collections.Specialized.NotifyCollectionChangedEventArgs e){
+        SalvarVendas();
+        AtualizarAnosDisponiveis();
+        AplicarFiltro();
+        VendasAlteradas?.Invoke(this, EventArgs.Empty);
+    }
+
+    private void OnVendaPropertyChanged(object? sender, System.ComponentModel.PropertyChangedEventArgs e){
+        SalvarVendas();
+        if (e.PropertyName == nameof(Venda.Data)){
+            AtualizarAnosDisponiveis();
+        }
+        VendasAlteradas?.Invoke(this, EventArgs.Empty);
+    }
+
+    private void SalvarVendas(){
+        if (!_configuracoesVM.PastaConfigurada)
+            return;
+
+        if (Vendas.Count == 0 && File.Exists(CaminhoArquivo))
+            return;
+
+        try{
+            _configuracoesVM.CriarPastas();
+
             using var workbook = new XLWorkbook();
             var worksheet = workbook.Worksheets.Add("Vendas");
 
@@ -310,8 +293,7 @@ public partial class VendasViewModel : ObservableObject, IEditableGridViewModel
             headerRange.Style.Fill.BackgroundColor = XLColor.LightGray;
 
             int linha = 2;
-            foreach (var venda in Vendas)
-            {
+            foreach (var venda in Vendas){
                 worksheet.Cell(linha, 1).Value = venda.Data;
                 worksheet.Cell(linha, 2).Value = venda.Planta;
                 worksheet.Cell(linha, 3).Value = venda.Quantidade;
@@ -323,35 +305,49 @@ public partial class VendasViewModel : ObservableObject, IEditableGridViewModel
             }
 
             worksheet.Columns().AdjustToContents();
-            workbook.SaveAs(caminhoArquivo);
+            workbook.SaveAs(CaminhoArquivo);
         }
-        catch (Exception ex)
-        {
+        catch (Exception ex){
             Console.WriteLine($"Erro ao salvar vendas: {ex.Message}");
         }
     }
 
-    private void CriarArquivoExcel()
-    {
-        using var workbook = new XLWorkbook();
-        var worksheet = workbook.Worksheets.Add("Vendas");
+    private void CriarArquivoExcel(){
+        //se o arquivo já existe, NÃO sobrescreve
+        if (File.Exists(CaminhoArquivo)){
+            Console.WriteLine($"Arquivo já existe, não será sobrescrito: {CaminhoArquivo}");
+            return;
+        }
 
-        worksheet.Cell(1, 1).Value = "Data";
-        worksheet.Cell(1, 2).Value = "Cliente";
-        worksheet.Cell(1, 3).Value = "Planta";
-        worksheet.Cell(1, 4).Value = "Quantidade";
-        worksheet.Cell(1, 5).Value = "Valor";
-        worksheet.Cell(1, 6).Value = "Forma de Pagamento";
+        try{
+            _configuracoesVM.CriarPastas();
 
-        var headerRange = worksheet.Range(1, 1, 1, 6);
-        headerRange.Style.Font.Bold = true;
-        headerRange.Style.Fill.BackgroundColor = XLColor.LightGray;
+            Console.WriteLine($"Criando novo arquivo: {CaminhoArquivo}");
 
-        workbook.SaveAs(caminhoArquivo);
+            using var workbook = new XLWorkbook();
+            var worksheet = workbook.Worksheets.Add("Vendas");
+
+            worksheet.Cell(1, 1).Value = "Data";
+            worksheet.Cell(1, 2).Value = "Planta";
+            worksheet.Cell(1, 3).Value = "Quantidade";
+            worksheet.Cell(1, 4).Value = "Valor";
+            worksheet.Cell(1, 5).Value = "Valor Total";
+            worksheet.Cell(1, 6).Value = "Cliente";
+            worksheet.Cell(1, 7).Value = "Forma de Pagamento";
+
+            var headerRange = worksheet.Range(1, 1, 1, 7);
+            headerRange.Style.Font.Bold = true;
+            headerRange.Style.Fill.BackgroundColor = XLColor.LightGray;
+
+            workbook.SaveAs(CaminhoArquivo);
+            Console.WriteLine("Arquivo criado com sucesso!");
+        }
+        catch (Exception ex){
+            Console.WriteLine($"Erro ao criar arquivo Excel: {ex.Message}");
+        }
     }
 
-    private async Task MostrarMensagem(string titulo, string mensagem)
-    {
+    private async Task MostrarMensagem(string titulo, string mensagem){
         var box = MessageBoxManager.GetMessageBoxStandard(
             new MsBox.Avalonia.Dto.MessageBoxStandardParams
             {
@@ -365,8 +361,7 @@ public partial class VendasViewModel : ObservableObject, IEditableGridViewModel
         await box.ShowAsync();
     }
 
-    private async Task<bool> MostrarConfirmacao(string titulo, string mensagem)
-    {
+    private async Task<bool> MostrarConfirmacao(string titulo, string mensagem){
         var box = MessageBoxManager.GetMessageBoxStandard(
             new MsBox.Avalonia.Dto.MessageBoxStandardParams
             {
@@ -381,14 +376,11 @@ public partial class VendasViewModel : ObservableObject, IEditableGridViewModel
         return result == ButtonResult.Yes;
     }
 
-    // Método público para obter vendas de um período (útil para FrequenciasViewModel e BalancoViewModel)
-    public IEnumerable<Venda> ObterVendasPorPeriodo(int ano, int mes)
-    {
+    public IEnumerable<Venda> ObterVendasPorPeriodo(int ano, int mes){
         return Vendas.Where(v => v.Data.Year == ano && v.Data.Month == mes);
     }
 
-    public decimal ObterTotalVendasPorPeriodo(int ano, int mes)
-    {
+    public decimal ObterTotalVendasPorPeriodo(int ano, int mes){
         return ObterVendasPorPeriodo(ano, mes).Sum(v => v.ValorTotal);
     }
 }
