@@ -271,7 +271,9 @@ public partial class BalancoViewModel : ObservableObject, IEditableGridViewModel
         }
     }
 
-    public void Salvar() => ExportarBalanco();
+    public async Task SalvarAsync(){
+        await ExportarBalanco();
+    }
 
     private async Task MostrarMensagem(string titulo, string mensagem){
         var box = MessageBoxManager.GetMessageBoxStandard(

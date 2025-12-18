@@ -128,7 +128,8 @@ public partial class MainWindow : Window
         BalancoDataGrid.AddHandler(KeyDownEvent, DataGrid_KeyDownTunnel, RoutingStrategies.Tunnel);
     }
 
-    private void DataGrid_KeyDownTunnel(object? sender, KeyEventArgs e)
+    //private void DataGrid_KeyDownTunnel(object? sender, KeyEventArgs e)
+    private async void DataGrid_KeyDownTunnel(object? sender, KeyEventArgs e)
     {
         if (sender is not DataGrid dataGrid)
             return;
@@ -172,7 +173,8 @@ public partial class MainWindow : Window
         // CTRL + S - Salvar
         if (e.Key == Key.S && e.KeyModifiers.HasFlag(KeyModifiers.Control))
         {
-            viewModel.Salvar();
+            //viewModel.Salvar();
+            await viewModel.SalvarAsync();
             e.Handled = true;
             return;
         }

@@ -200,8 +200,9 @@ public partial class VendasViewModel : ObservableObject, IEditableGridViewModel{
     }
 
     [RelayCommand]
-    public void Salvar(){
+    public Task SalvarAsync(){
         SalvarVendas();
+        return Task.CompletedTask;
     }
 
     private void CarregarVendas(){

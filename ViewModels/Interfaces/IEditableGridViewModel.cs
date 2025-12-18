@@ -1,3 +1,5 @@
+using System.Threading.Tasks;
+
 namespace GerenciadorViveiro.ViewModels.Interfaces;
 public interface IEditableGridViewModel
 {
@@ -6,5 +8,5 @@ public interface IEditableGridViewModel
     void RecortarSelecionados();
     void Colar(int index);
     void NovaLinha();
-    void Salvar();
+    Task SalvarAsync();
 }

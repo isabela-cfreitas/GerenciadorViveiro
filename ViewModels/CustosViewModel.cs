@@ -7,6 +7,7 @@ using System.Collections.ObjectModel;
 using System.IO;
 using System.Linq;
 using System.Collections.Generic;
+using System.Threading.Tasks;
 using GerenciadorViveiro.ViewModels.Interfaces;
 
 namespace GerenciadorViveiro.ViewModels;
@@ -237,5 +238,8 @@ public partial class CustosViewModel : ObservableObject, IEditableGridViewModel
         }
     }
 
-    public void Salvar() => SalvarCustos();
+    public Task SalvarAsync(){
+        SalvarCustos();
+        return Task.CompletedTask;
+    }
 }
