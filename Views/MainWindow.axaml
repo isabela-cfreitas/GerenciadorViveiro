@@ -323,18 +323,17 @@
                     <RowDefinition Height="Auto"/>
                 </Grid.RowDefinitions>
 
-                <!-- Seleção mês/ano -->
+                <!-- Seleção apenas de ano -->
                 <StackPanel Orientation="Horizontal" Margin="0,0,0,10">
-                    <TextBlock Text="Ano:" Margin="0,0,5,0"/>
+                    <TextBlock Text="Ano:" Margin="0,0,5,0" VerticalAlignment="Center"/>
                     <TextBox Width="100"
                         Text="{Binding BalancoVM.AnoSelecionado, Mode=TwoWay}"
                         Watermark="Ano"/>
-
-                    <TextBlock Text="Mês:" Margin="15,0,5,0"/>
-                    <TextBox Width="80"
-                        Margin="15,0,0,0"
-                        Text="{Binding BalancoVM.MesSelecionado, Mode=TwoWay}"
-                        Watermark="Mês (1–12)"/>
+                    <TextBlock Text="(Visualização anual - 12 meses)" 
+                            Margin="15,0,0,0" 
+                            VerticalAlignment="Center"
+                            Foreground="Gray"
+                            FontSize="11"/>
                 </StackPanel>
 
                 <!-- Tabela -->
@@ -347,13 +346,13 @@
                         CanUserReorderColumns="True"
                         CanUserResizeColumns="True">
                     <DataGrid.Columns>
-                        <DataGridTextColumn Header="Descrição" Binding="{Binding Descricao}" Width="*"/>
+                        <DataGridTextColumn Header="Mês" Binding="{Binding NomeMes}" IsReadOnly="True" Width="*"/>
                         <DataGridTextColumn Header="Renda Bruta" Binding="{Binding RendaBruta, StringFormat='C2'}" IsReadOnly="True" Width="*"/>
                         <DataGridTextColumn Header="Custo Total" Binding="{Binding CustoTotal, StringFormat='C2'}" IsReadOnly="True" Width="*"/>
                         <DataGridTextColumn Header="Margem Lucro" Binding="{Binding MargemLucro, StringFormat='C2'}" IsReadOnly="True" Width="*"/>
-                        <DataGridTextColumn Header="% Luís" Binding="{Binding PercentualLuis}" Width="*"/>
-                        <DataGridTextColumn Header="% Pedro" Binding="{Binding PercentualPedro}" Width="*"/>
-                        <DataGridTextColumn Header="% Viveiro" Binding="{Binding PercentualViveiro}" Width="*"/>
+                        <DataGridTextColumn Header="% Luís" Binding="{Binding PercentualLuis}" Width="80"/>
+                        <DataGridTextColumn Header="% Pedro" Binding="{Binding PercentualPedro}" Width="80"/>
+                        <DataGridTextColumn Header="% Viveiro" Binding="{Binding PercentualViveiro}" Width="80"/>
                         <DataGridTextColumn Header="R$ Luís" Binding="{Binding ValorLuis, StringFormat='C2'}" IsReadOnly="True" Width="*"/>
                         <DataGridTextColumn Header="R$ Pedro" Binding="{Binding ValorPedro, StringFormat='C2'}" IsReadOnly="True" Width="*"/>
                         <DataGridTextColumn Header="R$ Viveiro" Binding="{Binding ValorViveiro, StringFormat='C2'}" IsReadOnly="True" Width="*"/>
@@ -362,14 +361,6 @@
 
                 <!-- Botões -->
                 <StackPanel Grid.Row="2" Orientation="Horizontal" HorizontalAlignment="Center" Margin="0,10,0,0">
-                    <Button Content="Nova Linha" 
-                            Command="{Binding BalancoVM.NovaLinhaCommand}"
-                            Background="#4CAF50" Foreground="White"
-                            Padding="20,8" Margin="5"/>
-                    <Button Content="Excluir Linha(s)" 
-                            Command="{Binding BalancoVM.ExcluirLinhasCommand}"
-                            Background="#F44336" Foreground="White"
-                            Padding="20,8" Margin="5"/>
                     <Button Content="Salvar" 
                             Command="{Binding BalancoVM.SalvarBalancosCommand}"
                             Background="#2196F3" Foreground="White"

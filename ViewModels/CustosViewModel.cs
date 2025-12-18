@@ -30,6 +30,9 @@ public partial class CustosViewModel : ObservableObject, IEditableGridViewModel
     [ObservableProperty]
     private int mesSelecionado = DateTime.Today.Month;
 
+    //observer
+    public event EventHandler? CustosAlterados;
+
     public CustosViewModel()
     {
         Directory.CreateDirectory(PastaCustos);
@@ -99,12 +102,14 @@ public partial class CustosViewModel : ObservableObject, IEditableGridViewModel
 
         ws.Columns().AdjustToContents();
         workbook.SaveAs(CaminhoArquivo);
+        CustosAlterados?.Invoke(this, EventArgs.Empty);
     }
 
     [RelayCommand]
     public void NovaLinha()
     {
         Custos.Add(new Custo());
+        CustosAlterados?.Invoke(this, EventArgs.Empty);
     }
 
     [RelayCommand]
@@ -118,6 +123,7 @@ public partial class CustosViewModel : ObservableObject, IEditableGridViewModel
         {
             Custos.Remove(custo);
         }
+        CustosAlterados?.Invoke(this, EventArgs.Empty);
     }
 
     private void CriarArquivo()
