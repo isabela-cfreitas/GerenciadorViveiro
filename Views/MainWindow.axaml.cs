@@ -1,36 +1,54 @@
 using Avalonia.Controls;
 using Avalonia.Input;
 using Avalonia.Interactivity;
+using Avalonia.Platform.Storage;
 using GerenciadorViveiro.ViewModels;
 using GerenciadorViveiro.ViewModels.Interfaces;
 using System.Linq;
+using System.Threading.Tasks;
 
 namespace GerenciadorViveiro.Views;
 
-public partial class MainWindow : Window {
+public partial class MainWindow : Window
+{
     private MainWindowViewModel _viewModel;
 
-    public MainWindow() {
+    public MainWindow()
+    {
         InitializeComponent();
         _viewModel = new MainWindowViewModel();
         DataContext = _viewModel;
 
-        // Configura eventos para a tabela de Vendas
-        VendasDataGrid.SelectionChanged += (s, e) => {
-            if (_viewModel != null) {
-                _viewModel.VendasSelecionadas.Clear();
-                foreach (var item in VendasDataGrid.SelectedItems.Cast<Models.Venda>()) {
-                    _viewModel.VendasSelecionadas.Add(item);
+        ConfigurarEventosVendas();
+        ConfigurarEventosCustos();
+        ConfigurarEventosBalanco(); 
+    }
+
+    private void ConfigurarEventosVendas()
+    {
+        VendasDataGrid.SelectionChanged += (s, e) =>
+        {
+            if (_viewModel?.VendasVM != null)
+            {
+                _viewModel.VendasVM.VendasSelecionadas.Clear();
+                foreach (var item in VendasDataGrid.SelectedItems.Cast<Models.Venda>())
+                {
+                    _viewModel.VendasVM.VendasSelecionadas.Add(item);
                 }
             }
         };
         VendasDataGrid.AddHandler(KeyDownEvent, DataGrid_KeyDownTunnel, RoutingStrategies.Tunnel);
+    }
 
-        // Configura eventos para a tabela de Custos
-        CustosDataGrid.SelectionChanged += (s, e) => {
-            if (_viewModel?.CustosVM != null) {
+    private void ConfigurarEventosCustos()
+    {
+        CustosDataGrid.SelectionChanged += (s, e) =>
+        {
+            if (_viewModel?.CustosVM != null)
+            {
                 _viewModel.CustosVM.CustosSelecionados.Clear();
-                foreach (var item in CustosDataGrid.SelectedItems.Cast<Models.Custo>()) {
+                foreach (var item in CustosDataGrid.SelectedItems.Cast<Models.Custo>())
+                {
                     _viewModel.CustosVM.CustosSelecionados.Add(item);
                 }
             }
@@ -38,77 +56,127 @@ public partial class MainWindow : Window {
         CustosDataGrid.AddHandler(KeyDownEvent, DataGrid_KeyDownTunnel, RoutingStrategies.Tunnel);
     }
 
-    private void OnTabSelectionChanged(object? sender, SelectionChangedEventArgs e){
-        if (!IsInitialized)
-            return;
+    private async void SelecionarPastaVendas(object? sender, RoutedEventArgs e)
+    {
+        var folder = await StorageProvider.OpenFolderPickerAsync(new FolderPickerOpenOptions
+        {
+            Title = "Selecione a pasta para o arquivo de vendas",
+            AllowMultiple = false
+        });
 
-        if (VendasDataGrid == null || _viewModel == null)
-            return;
-
-        VendasDataGrid.CommitEdit(DataGridEditingUnit.Cell, true);
-        VendasDataGrid.CommitEdit(DataGridEditingUnit.Row, true);
-        
-        CustosDataGrid.CommitEdit(DataGridEditingUnit.Cell, true);
-        CustosDataGrid.CommitEdit(DataGridEditingUnit.Row, true);
-
-        _viewModel.CalcularFrequencias();
+        if (folder.Count > 0)
+        {
+            _viewModel.ConfiguracoesVM.PastaVendas = folder[0].Path.LocalPath;
+        }
     }
 
-    private void CalcularFrequencias(object? sender, TappedEventArgs e) {
-        _viewModel.CalcularFrequencias();
+    private async void SelecionarPastaCustos(object? sender, RoutedEventArgs e)
+    {
+        var folder = await StorageProvider.OpenFolderPickerAsync(new FolderPickerOpenOptions
+        {
+            Title = "Selecione a pasta para os arquivos de custos",
+            AllowMultiple = false
+        });
+
+        if (folder.Count > 0)
+        {
+            _viewModel.ConfiguracoesVM.PastaCustos = folder[0].Path.LocalPath;
+        }
     }
 
-    private void DataGrid_KeyDownTunnel(object? sender, KeyEventArgs e) {
+    private void OnTabSelectionChanged(object? sender, SelectionChangedEventArgs e)
+    {
+        if (!IsInitialized || _viewModel == null)
+            return;
+
+        if (VendasDataGrid != null)
+        {
+            VendasDataGrid.CommitEdit(DataGridEditingUnit.Cell, true);
+            VendasDataGrid.CommitEdit(DataGridEditingUnit.Row, true);
+        }
+
+        if (CustosDataGrid != null)
+        {
+            CustosDataGrid.CommitEdit(DataGridEditingUnit.Cell, true);
+            CustosDataGrid.CommitEdit(DataGridEditingUnit.Row, true);
+        }
+
+        _viewModel.FrequenciasVM.CalcularFrequencias();
+    }
+
+    private void CalcularFrequencias(object? sender, TappedEventArgs e)
+    {
+        _viewModel.FrequenciasVM.CalcularFrequencias();
+    }
+
+    private void ConfigurarEventosBalanco()
+    {
+        BalancoDataGrid.SelectionChanged += (s, e) =>
+        {
+            if (_viewModel?.BalancoVM != null)
+            {
+                _viewModel.BalancoVM.BalancosSelecionados.Clear();
+                foreach (var item in BalancoDataGrid.SelectedItems.Cast<BalancoViewModel.ItemBalanco>())
+                {
+                    _viewModel.BalancoVM.BalancosSelecionados.Add(item);
+                }
+            }
+        };
+        BalancoDataGrid.AddHandler(KeyDownEvent, DataGrid_KeyDownTunnel, RoutingStrategies.Tunnel);
+    }
+
+    private void DataGrid_KeyDownTunnel(object? sender, KeyEventArgs e)
+    {
         if (sender is not DataGrid dataGrid)
             return;
 
         // Identifica qual ViewModel usar baseado no DataGrid
-        IEditableGridViewModel? viewModel = dataGrid.Name switch {
-            nameof(VendasDataGrid) => _viewModel,
+        IEditableGridViewModel? viewModel = dataGrid.Name switch
+        {
+            nameof(VendasDataGrid) => _viewModel.VendasVM,
             nameof(CustosDataGrid) => _viewModel.CustosVM,
+            nameof(BalancoDataGrid) => _viewModel.BalancoVM,
             _ => null
         };
 
         if (viewModel == null)
             return;
 
-        // DEL
-        if (e.Key == Key.Delete) {
+        // DEL - Apagar
+        if (e.Key == Key.Delete)
+        {
             viewModel.ApagarSelecionados();
             e.Handled = true;
             return;
         }
-        
-        // // CTRL + A
-        // if (e.Key == Key.A && e.KeyModifiers.HasFlag(KeyModifiers.Control)) {
-        //     _viewModel.Salvar();
-        //     e.Handled = true;
-        //     return;
-        // }
 
-        // CTRL + C
-        if (e.Key == Key.C && e.KeyModifiers.HasFlag(KeyModifiers.Control)) {
+        // CTRL + C - Copiar
+        if (e.Key == Key.C && e.KeyModifiers.HasFlag(KeyModifiers.Control))
+        {
             viewModel.CopiarSelecionados();
             e.Handled = true;
             return;
         }
 
-        // CTRL + N
-        if (e.Key == Key.N && e.KeyModifiers.HasFlag(KeyModifiers.Control)) {
+        // CTRL + N - Nova linha
+        if (e.Key == Key.N && e.KeyModifiers.HasFlag(KeyModifiers.Control))
+        {
             viewModel.NovaLinha();
             e.Handled = true;
             return;
         }
 
-        // CTRL + S
-        if (e.Key == Key.S && e.KeyModifiers.HasFlag(KeyModifiers.Control)) {
+        // CTRL + S - Salvar
+        if (e.Key == Key.S && e.KeyModifiers.HasFlag(KeyModifiers.Control))
+        {
             viewModel.Salvar();
             e.Handled = true;
             return;
         }
 
-        // CTRL + V
-        if (e.Key == Key.V && e.KeyModifiers.HasFlag(KeyModifiers.Control)) {
+        // CTRL + V - Colar
+        if (e.Key == Key.V && e.KeyModifiers.HasFlag(KeyModifiers.Control))
+        {
             int index = dataGrid.SelectedIndex;
             if (index >= 0)
                 viewModel.Colar(index);
@@ -117,14 +185,15 @@ public partial class MainWindow : Window {
             return;
         }
 
-        // CTRL + X
-        if (e.Key == Key.X && e.KeyModifiers.HasFlag(KeyModifiers.Control)) {
+        // CTRL + X - Recortar
+        if (e.Key == Key.X && e.KeyModifiers.HasFlag(KeyModifiers.Control))
+        {
             viewModel.RecortarSelecionados();
             e.Handled = true;
             return;
         }
 
-        // ENTER - navega entre células
+        // ENTER - Navega entre células
         if (e.Key != Key.Enter)
             return;
 
@@ -142,13 +211,16 @@ public partial class MainWindow : Window {
         int colIndex = column.DisplayIndex;
         int totalColumns = dataGrid.Columns.Count;
 
-        if (colIndex == totalColumns - 1) {
-            if (rowIndex < dataGrid.ItemsSource.Cast<object>().Count() - 1) {
+        if (colIndex == totalColumns - 1)
+        {
+            if (rowIndex < dataGrid.ItemsSource.Cast<object>().Count() - 1)
+            {
                 dataGrid.SelectedIndex = rowIndex + 1;
                 dataGrid.CurrentColumn = dataGrid.Columns[0];
             }
         }
-        else {
+        else
+        {
             dataGrid.CurrentColumn = dataGrid.Columns[colIndex + 1];
         }
 
